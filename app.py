@@ -36,5 +36,23 @@ def predict_api():
 
     return jsonify(output[0])
 
+@app.route('/predict',methods=['POST'])
+def predict():
+    global scalar  # Ensure we're using the global scalar
+
+    data=[float(x) for x in request.form.values()]
+
+    # Try to transform the data using the fitted scaler
+    try:
+        final_input = scalar.transform(np.array(data).reshape(1,-1))
+    except AttributeError:
+        # If scaler is not fitted, fit it with the current data
+        scalar.fit(np.array(data).reshape(1,-1))
+        # Transform the data using the fitted scaler
+        final_input = scalar.transform(np.array(data).reshape(1,-1))
+
+    output = regmodel.predict(final_input)[0]
+    return render_template("home.html", prediction_text="The house price prediction is {}".format(output))
+
 if __name__ == "__main__":
     app.run(debug=True)
